@@ -3,6 +3,7 @@ package com.agenda.controller;
 import java.util.List;
 import java.util.Optional;
 
+import javax.annotation.Resource;
 import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,12 +21,15 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.agenda.config.view.Views;
 import com.agenda.domain.model.Contato;
+import com.agenda.domain.model.Usuario;
 import com.agenda.domain.repository.ContatoRepository;
+import com.agenda.domain.repository.UsuarioRepository;
 import com.agenda.domain.service.ContatoService;
 import com.fasterxml.jackson.annotation.JsonView;
 
 @RestController
 @RequestMapping("/contatos")
+@Resource
 public class ContatoController {
 	
 	@Autowired
@@ -34,19 +38,23 @@ public class ContatoController {
 	@Autowired
 	private ContatoService contatoService;
 	
-	@GetMapping
-	@JsonView(Views.Contato.class)
-	public List<Contato> listar() {
-		return contatoRepository.findAll();
-	}
+	@Autowired
+	private UsuarioRepository usuarioRepository;
 	
-	@GetMapping("/{usuarioId}")
+	
 	@JsonView(Views.Contato.class)
-	public ResponseEntity<Contato> buscar(@PathVariable Long usuarioId) {
-		Optional<Contato> contato = contatoRepository.findById(usuarioId);
+	@GetMapping("/usuario-{usuarioId}")
+	public ResponseEntity<List<Contato>> findAll(@PathVariable Long usuarioId) {
+		return ResponseEntity.ok().body(contatoRepository.findAllByUsuarioId(usuarioId));
+	}	
+	
+	@GetMapping("/{contatoId}/usuario}")
+	@JsonView(Views.Contato.class)
+	public ResponseEntity<Contato> findById(@PathVariable Long contatoId, @PathVariable Long usuarioId) {
+		Optional<Contato> contato = contatoRepository.findById(contatoId);
 		
-		if (contato.isPresent()) {
-			return ResponseEntity.ok(contato.get());
+		if(contato.isPresent() && contato.get().getUsuario().getId() == usuarioId) {
+			return ResponseEntity.ok().body(contato.get());
 		}
 		
 		return ResponseEntity.notFound().build();
@@ -55,37 +63,52 @@ public class ContatoController {
 	@PostMapping
 	@ResponseStatus(HttpStatus.CREATED)
 	@JsonView(Views.Contato.class)
-	public Contato criar(@RequestBody Contato contato) throws Exception {
+	public ResponseEntity<Contato> criar(@Valid @RequestBody Contato contato) throws Exception {
+		Usuario usuario_id = contato.getUsuario();
+		Optional<Usuario> usuario = usuarioRepository.findById(usuario_id.getId()); 
 		
-		return contatoService.criar(contato);
+		if(usuario != null) {
+			contato.setUsuario(usuario.get());
+		}
 		
-	}
-	
-	@PutMapping("/{usuarioId}")
+		Contato c = contatoService.criar(contato);
+		
+		contatoService.criar(c);
+		
+		return ResponseEntity.ok().body(c);
+		
+	}	
+		
+	@PutMapping("/{contatoId}")
 	@JsonView(Views.Contato.class)
-	public ResponseEntity<Contato> atualizar(@Valid @PathVariable Long usuarioId,
-			@RequestBody Contato contato) {
+	public ResponseEntity<Contato> atualizar(@Valid @PathVariable Long contatoId,
+			@RequestBody Contato contato) throws Exception {
 		
-		if (!contatoRepository.existsById(usuarioId)) {
+		if (!contatoRepository.existsById(contatoId)) {
 			return ResponseEntity.notFound().build();
 		}
 		
-		contato.setId(usuarioId);
-		contato = contatoService.salvar(contato);
+		Usuario usuario_id = contato.getUsuario();
+		Optional<Usuario> usuario = usuarioRepository.findById(usuario_id.getId()); 
 		
-		return ResponseEntity.ok(contato);
+		if(usuario != null) {
+			contato.setUsuario(usuario.get());
+		}
+		
+		contato.setId(contatoId);
+		contato = contatoService.criar(contato);
+		
+		return ResponseEntity.ok().body(contato);
 	}
 	
-	@DeleteMapping("/{usuarioId}")
-	public ResponseEntity<Void> remover(@PathVariable Long usuarioId) {
-		if (!contatoRepository.existsById(usuarioId)) {
+	@DeleteMapping("/{contatoId}")
+	public ResponseEntity<Void> remover(@PathVariable Long contatoId) {
+		if (!contatoRepository.existsById(contatoId)) {
 			return ResponseEntity.notFound().build();
 		}
 		
-		contatoService.excluir(usuarioId);
+		contatoService.excluir(contatoId);
 		
 		return ResponseEntity.noContent().build();
 	}
-
-
 }

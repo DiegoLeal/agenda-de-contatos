@@ -19,7 +19,7 @@ public class UsuarioService {
 	private PasswordEncoder encoder;
 	
 	public Usuario salvar(Usuario usuario) throws Exception {
-		Usuario usuarioExis = usuarioRepository.findByEmail(usuario.getEmail());
+		Usuario usuarioExis = usuarioRepository.findOneByEmail(usuario.getEmail());
 
 		if (usuarioExis != null && !usuarioExis.equals(usuario)) {
 			throw new Exception("Ja exixte um Usuario cadastrado com este Email");
