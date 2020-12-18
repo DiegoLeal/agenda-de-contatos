@@ -35,8 +35,14 @@ public class UsuarioController {
 	private UsuarioService cadastroUsuario;
 
 	@GetMapping
-	public List<Usuario> listar() {
-		return usuarioRepository.findAll();
+	public ResponseEntity<List<Usuario>> findAll() {
+		return ResponseEntity.ok().body(usuarioRepository.findAll());
+	}
+	
+	@PostMapping("/email")
+	@ResponseStatus(HttpStatus.ACCEPTED)
+	public ResponseEntity<Usuario> findByEmail(@RequestBody Usuario usuario) {
+		return ResponseEntity.ok().body(usuarioRepository.findOneByEmail(usuario.getEmail()));
 	}
 
 	@GetMapping("{usuarioId}")
@@ -44,7 +50,7 @@ public class UsuarioController {
 		Optional<Usuario> usuario = usuarioRepository.findById(usuarioId);
 
 		if (usuario.isPresent()) {
-			return ResponseEntity.ok(usuario.get());
+			return ResponseEntity.ok().body(usuario.get());
 		}
 
 		return ResponseEntity.notFound().build();

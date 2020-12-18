@@ -33,6 +33,9 @@ public class Contato {
 	private String email;
 	
 	@JsonView(Views.Contato.class)
-	private String contatoCel;
+	private String contatoCel;		
+	
+	public Contato() {
+	}
 		
 }

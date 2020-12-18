@@ -19,7 +19,7 @@ public class ContatoService {
 	
 	public Contato criar(Contato contato) throws Exception {
 		Usuario usuario = usuarioRepository.findById(contato.getUsuario().getId())
-				.orElseThrow(() -> new Exception("Usuario não encontrado"));
+				.orElseThrow(() -> new Exception("Usuario nao encontrado"));
 		
 		contato.setUsuario(usuario);
 		return contatoRepository.save(contato);
@@ -30,8 +30,10 @@ public class ContatoService {
 		return contatoRepository.save(contato);
 	}
 
-	public void excluir(Long usuarioId) {		
-		contatoRepository.deleteById(usuarioId);
+	public void excluir(Long contatoId) {		
+		contatoRepository.deleteById(contatoId);
 	}
+	
+
 
 }
